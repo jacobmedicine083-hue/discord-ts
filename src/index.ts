@@ -2,6 +2,7 @@ import {
     Client,
     Events,
     GatewayIntentBits,
+    ActivityType,
     SlashCommandBuilder,
     Partials,
     REST,
@@ -14,6 +15,7 @@ import { readdirSync } from "fs";
 import dotenv from "dotenv";
 dotenv.config();
 import testCommand from "./slashCommands/ping";
+import modCommands from "./slashCommands/moderation";
 
 const token = process.env.DISCORD_TOKEN; // Token from Railway Env Variable.
 const client_id = process.env.CLIENT_ID;
@@ -26,12 +28,21 @@ const client = new Client({
 });
 client.once(Events.ClientReady, async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
+    await client.user?.setPresence({
+        activities: [{ name: "Moderation mode", type: ActivityType.Watching }],
+        status: "online"
+    });
 });
 console.log("jweqioweqeqww");
 
 const slashCommands = new Collection<string, SlashCommand>()
 slashCommands.set(testCommand.command.name, testCommand)
 const slashCommandsArr: SlashCommandBuilder[] = [testCommand.command]
+
+for (const command of modCommands) {
+    slashCommands.set(command.command.name, command);
+    slashCommandsArr.push(command.command);
+}
 
 const rest = new REST({ version: "10" }).setToken(token);
 rest.put(Routes.applicationCommands(client_id), {
